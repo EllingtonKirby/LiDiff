@@ -59,7 +59,7 @@ class TemporalKITTISet(Dataset):
             point_seq_path = os.path.join(self.data_dir, 'dataset', 'sequences', seq)
             point_seq_bin = natsorted(os.listdir(os.path.join(point_seq_path, 'velodyne')))
             poses = load_poses(os.path.join(point_seq_path, 'calib.txt'), os.path.join(point_seq_path, 'poses.txt'))
-            p_full = np.load(f'{point_seq_path}/map_clean.npy') if self.split != 'test' else np.array([[1,0,0],[0,1,0],[0,0,1]])
+            p_full = np.load(f'{point_seq_path}/clean_map.npy') if self.split != 'test' else np.array([[1,0,0],[0,1,0],[0,0,1]])
             self.cache_maps[seq] = p_full
  
             for file_num in range(0, len(point_seq_bin)):
@@ -86,19 +86,19 @@ class TemporalKITTISet(Dataset):
             label_file = self.points_datapath[index].replace('velodyne', 'labels').replace('.bin', '.label')
             l_set = np.fromfile(label_file, dtype=np.uint32)
             l_set = l_set.reshape((-1))
-            l_set = l_set & 0xFFFF
-            static_idx = (l_set < 252) & (l_set > 1)
+            l_set = l_set & 0xFFFF # Get the label from the least significant 16 bits
+            static_idx = (l_set < 252) & (l_set > 1) # Isolate only non-moving objects
             p_part = p_part[static_idx]
-        dist_part = np.sum(p_part**2, -1)**.5
+        dist_part = np.sum(p_part**2, -1)**.5 # Get total magnitude of distance
         p_part = p_part[(dist_part < self.max_range) & (dist_part > 3.5)]
-        p_part = p_part[p_part[:,2] > -4.]
+        p_part = p_part[p_part[:,2] > -4.] # Filter out noisy points
         pose = self.seq_poses[index]
 
         p_map = self.cache_maps[seq_num]
 
         if self.split != 'test':
             trans = pose[:-1,-1]
-            dist_full = np.sum((p_map - trans)**2, -1)**.5
+            dist_full = np.sum((p_map - trans)**2, -1)**.5 # Align to a specific 
             p_full = p_map[dist_full < self.max_range]
             p_full = np.concatenate((p_full, np.ones((len(p_full),1))), axis=-1)
             p_full = (p_full @ np.linalg.inv(pose).T)[:,:3]

@@ -8,9 +8,8 @@ import open3d as o3d
 from lidiff.utils.scheduling import beta_func
 from tqdm import tqdm
 from os import makedirs
-from pytorch3d.loss import chamfer_distance
 
-from pytorch_lightning.core.lightning import LightningModule
+from pytorch_lightning.core.module import LightningModule
 from pytorch_lightning import LightningDataModule
 from lidiff.utils.collations import *
 from lidiff.utils.metrics import ChamferDistance, PrecisionRecall

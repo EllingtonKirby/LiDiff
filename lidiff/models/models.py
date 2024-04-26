@@ -9,7 +9,7 @@ from lidiff.utils.scheduling import beta_func
 from tqdm import tqdm
 from os import makedirs, path
 
-from pytorch_lightning.core.lightning import LightningModule
+from pytorch_lightning.core.module import LightningModule
 from pytorch_lightning import LightningDataModule
 from lidiff.utils.collations import *
 from lidiff.utils.metrics import ChamferDistance, PrecisionRecall
@@ -186,12 +186,13 @@ class DiffusionPoints(LightningModule):
         t = torch.randint(0, self.t_steps, size=(batch['pcd_full'].shape[0],)).cuda()
         # sample q at step t
         # we sample noise towards zero to then add to each point the noise (without normalizing the pcd)
-        t_sample = batch['pcd_full'] + self.q_sample(torch.zeros_like(batch['pcd_full']), t, noise)
+        # MODIFIED: WE CHANGE THE FORMULATION
+        t_sample = self.q_sample(batch['pcd_full'], t, noise)
 
         # replace the original points with the noise sampled
         x_full = self.points_to_tensor(t_sample, batch['mean'], batch['std'])
 
-        # for classifier-free guidance switch between conditional and unconditional training
+        # for classifier-free guidance switch between conditional and unconditional training NOTE THIS NEEDS TO CHANGE FOR BATCH SIZE 1 TRAINING
         if torch.rand(1) > self.hparams['train']['uncond_prob'] or batch['pcd_full'].shape[0] == 1:
             x_part = self.points_to_tensor(batch['pcd_part'], batch['mean'], batch['std'])
         else:

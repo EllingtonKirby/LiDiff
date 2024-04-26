@@ -4,7 +4,7 @@ import torch
 import lidiff.models.minkunet as minknet
 import open3d as o3d
 from diffusers import DPMSolverMultistepScheduler
-from pytorch_lightning.core.lightning import LightningModule
+from pytorch_lightning import LightningModule
 import yaml
 import os
 import tqdm
@@ -13,7 +13,7 @@ import click
 import time
 
 class DiffCompletion(LightningModule):
-    def __init__(self, diff_path, refine_path, denoising_steps, cond_weight):
+    def __init__(self, diff_path, refine_path, denoising_steps, cond_weight, n_points=None):
         super().__init__()
         ckpt_diff = torch.load(diff_path)
         self.save_hyperparameters(ckpt_diff['hyper_parameters'])
@@ -49,6 +49,9 @@ class DiffCompletion(LightningModule):
         self.hparams['train']['uncond_w'] = cond_weight
         self.hparams['data']['max_range'] = 50.
         self.w_uncond = self.hparams['train']['uncond_w']
+
+        if n_points != None:
+            self.hparams['data']['num_points'] = n_points
         
         exp_dir = diff_path.split('/')[-1].split('.')[0].replace('=','')  + f'_T{denoising_steps}_s{cond_weight}'
         os.makedirs(f'./results/{exp_dir}', exist_ok=True)
@@ -181,11 +184,12 @@ def load_pcd(pcd_file):
 @click.option('--refine', '-r', type=str, default='checkpoints/refine_net.ckpt', help='path to the scan sequence')
 @click.option('--denoising_steps', '-T', type=int, default=50, help='number of denoising steps (default: 50)')
 @click.option('--cond_weight', '-s', type=float, default=6.0, help='conditioning weight (default: 6.0)')
-def main(diff, refine, denoising_steps, cond_weight):
-    exp_dir = diff.split('/')[-1].split('.')[0].replace('=','') + f'_T{denoising_steps}_s{cond_weight}'
+@click.option('--num_points', '-n', type=float, default=None, help='specify different number of points (default: None)')
+def main(diff, refine, denoising_steps, cond_weight, num_points):
+    exp_dir = diff.split('/')[-1].split('.')[0].replace('=','') + f'_T{denoising_steps}_s{cond_weight}_n{num_points}'
 
     diff_completion = DiffCompletion(
-            diff, refine, denoising_steps, cond_weight
+            diff, refine, denoising_steps, cond_weight, n_points=num_points
         )
 
     path = './Datasets/test/'

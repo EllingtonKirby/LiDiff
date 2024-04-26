@@ -1,0 +1,9 @@
+lidiff.egg-info
+.vscode
+exploration.ipynb
+lidiff/__pycache__/
+__pycache__
+*/__pycache__
+experiments
+lidiff/checkpoints
+lidiff/results

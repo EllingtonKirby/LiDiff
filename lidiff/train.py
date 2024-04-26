@@ -88,28 +88,32 @@ def main(config, weights, checkpoint, test):
     if torch.cuda.device_count() > 1:
         cfg['train']['n_gpus'] = torch.cuda.device_count()
         model = ME.MinkowskiSyncBatchNorm.convert_sync_batchnorm(model)
-        trainer = Trainer(gpus=cfg['train']['n_gpus'],
-                          logger=tb_logger,
-                          log_every_n_steps=100,
-                          resume_from_checkpoint=checkpoint,
-                          max_epochs= cfg['train']['max_epoch'],
-                          callbacks=[lr_monitor, checkpoint_saver],
-                          check_val_every_n_epoch=5,
-                          num_sanity_val_steps=0,
-                          limit_val_batches=0.001,
-                          accelerator='ddp',
-                          )
+        trainer = Trainer(
+                        devices=cfg['train']['n_gpus'],
+                        logger=tb_logger,
+                        log_every_n_steps=100,
+                        # resume_from_checkpoint=checkpoint,
+                        max_epochs= cfg['train']['max_epoch'],
+                        callbacks=[lr_monitor, checkpoint_saver],
+                        check_val_every_n_epoch=5,
+                        num_sanity_val_steps=0,
+                        limit_val_batches=0.001,
+                        accelerator='gpu',
+                        strategy="ddp"
+                        )
     else:
-        trainer = Trainer(gpus=cfg['train']['n_gpus'],
-                          logger=tb_logger,
-                          log_every_n_steps=100,
-                          resume_from_checkpoint=checkpoint,
-                          max_epochs= cfg['train']['max_epoch'],
-                          callbacks=[lr_monitor, checkpoint_saver],
-                          check_val_every_n_epoch=5,
-                          num_sanity_val_steps=0,
-                          limit_val_batches=0.001,
-                          )
+        trainer = Trainer(
+                        accelerator='gpu',
+                        devices=cfg['train']['n_gpus'],
+                        logger=tb_logger,
+                        log_every_n_steps=100,
+                        # resume_from_checkpoint=checkpoint,
+                        max_epochs= cfg['train']['max_epoch'],
+                        callbacks=[lr_monitor, checkpoint_saver],
+                        check_val_every_n_epoch=5,
+                        num_sanity_val_steps=0,
+                        limit_val_batches=0.001,
+                        )
 
 
     # Train!

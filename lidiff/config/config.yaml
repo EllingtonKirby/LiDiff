@@ -1,9 +1,9 @@
 experiment:
-    id: prob10_5p0reg
+    id: fully_noised_clouds_2
 
 ##Data
 data:
-    data_dir: './Datasets/SemanticKITTI'
+    data_dir: '/datasets_local/semantic_kitti/'
     resolution: 0.05
     dataloader: 'KITTI'
     split: 'train'

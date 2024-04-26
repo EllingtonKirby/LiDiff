@@ -1,4 +1,5 @@
 import os
+import torch
 import numpy as np
 import open3d as o3d
 from natsort import natsorted
@@ -59,12 +60,13 @@ def load_poses(calib_fname, poses_fname):
 def main(path, voxel_size, max_dist, points_per_voxel):
 
     for seq in ['00','01','02','03','04','05','06','07','08','09','10']:
-        map_points = np.empty((0,3))
+        map_points = torch.empty((0,3)).cuda()
 
         poses = load_poses(os.path.join(path, seq, 'calib.txt'), os.path.join(path, seq, 'poses.txt'))
         for pose, pcd_path in tqdm.tqdm(list(zip(poses, natsorted(os.listdir(os.path.join(path, seq, 'velodyne')))))):
+            pose = torch.from_numpy(pose).float().cuda()
             pcd_file = os.path.join(path, seq, 'velodyne', pcd_path)
-            points = np.fromfile(pcd_file, dtype=np.float32)
+            points = torch.from_numpy(np.fromfile(pcd_file, dtype=np.float32)).cuda()
             points = points.reshape(-1,4)
 
             label_file = pcd_file.replace('velodyne', 'labels').replace('.bin', '.label')
@@ -77,20 +79,20 @@ def main(path, voxel_size, max_dist, points_per_voxel):
             points = points[static_idx]
 
             # remove flying artifacts
-            dist = np.power(points, 2)
-            dist = np.sqrt(dist.sum(-1))
+            dist = torch.pow(points, 2)
+            dist = torch.sqrt(dist.sum(-1))
             points = points[dist > 3.5]
 
             points[:,-1] = 1.
             points = points @ pose.T
 
-            map_points = np.concatenate((map_points, points[:,:3]), axis=0)
-            _, mapping = ME.utils.sparse_quantize(coordinates=map_points / voxel_size, return_index=True)
+            map_points = torch.concatenate((map_points, points[:,:3]), axis=0)
+            _, mapping = ME.utils.sparse_quantize(coordinates=map_points / voxel_size, return_index=True, device='cuda')
             map_points = map_points[mapping]
 
 
         print(f'saving map for sequence {seq}')
-        np.save(os.path.join(path, seq, 'clean_map.npy'), map_points)
+        np.save(os.path.join(path, seq, 'clean_map.npy'), map_points.cpu().numpy())
 
 
 if __name__ == '__main__':
