@@ -1,14 +1,15 @@
 experiment:
-    id: scnn_multiclass_gen_999
+    id: scnn_trailers_gen_999
 
 ##Data
 data:
-    data_dir: '/home/ekirby/scania/ekirby/datasets/all_objects_nuscenes_cleaned/all_objects_nuscenes_cleaned_train_val.json'
+    data_dir: /home/ekirby/scania/ekirby/datasets/trailers_from_nuscenes/trailers_token_to_data_with_indices.json
     resolution: 0.05
     dataloader: 'nuscenes'
     coordinates: 'cylindrical'
     points_per_object: -1
     align_objects: True
+    gen_class_name: trailer
 
 ##Training
 train:
@@ -27,7 +28,7 @@ diff:
     beta_end: 0.007
     beta_func: 'linear'
     t_steps: 1000
-    s_steps: 1
+    s_steps: 999
     reg_weight: 5.0
     visualize: False
     num_val_samples: 10
