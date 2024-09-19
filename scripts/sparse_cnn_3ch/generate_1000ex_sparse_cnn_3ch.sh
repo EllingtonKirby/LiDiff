@@ -6,7 +6,7 @@ pip install -e .
 
 cd lidiff
 
-replaced_dir=/home/ekirby/scania/ekirby/datasets/replaced_nuscenes_datasets_TEST
+replaced_dir=/home/ekirby/scania/ekirby/datasets/replaced_nuscenes_datasets
 
 # Generate 1000 BARRIERS, train and val
 config=config/sparse_cnn_ablation/scnn_barriers_gen.yaml
