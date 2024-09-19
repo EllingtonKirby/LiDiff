@@ -1,16 +1,16 @@
 experiment:
-    id: scnn_construction_vehicles_gen_999
+    id: scnn_motorcycles_gen_999
 
 ##Data
 data:
-    data_dir: '/home/ekirby/scania/ekirby/datasets/construction_vehicles_from_nuscenes/construction_vehicles_token_to_data_with_indices.json'
+    data_dir: '/home/ekirby/scania/ekirby/datasets/motorcycles_from_nuscenes/motorcycles_token_to_data_with_indices.json'
     resolution: 0.05
     dataloader: 'nuscenes'
     coordinates: 'cylindrical'
     points_per_object: -1
     align_objects: True
-    gen_class_name: construction_vehicle
-
+    gen_class_name: motorcycle
+    
 ##Training
 train:
     uncond_prob: 0.1

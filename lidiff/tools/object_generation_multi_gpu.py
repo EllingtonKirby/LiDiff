@@ -16,12 +16,6 @@ from nuscenes.utils.data_classes import Quaternion
 import json
 import glob
 
-def inverse_scale_intensity(scaled_data):
-    max_intensity = np.log1p(255.0)
-    data_log_transformed = scaled_data * max_intensity
-    original_data = np.round(np.clip(np.expm1(data_log_transformed), a_max=255.0, a_min=0.0))
-    return original_data
-
 def realign_pointclouds_to_scan(x_gen, orientation, center, aligned_angle):
     cos_yaw = np.cos(orientation)
     sin_yaw = np.sin(orientation)
@@ -35,7 +29,6 @@ def realign_pointclouds_to_scan(x_gen, orientation, center, aligned_angle):
     new_center[0] = angle_add(aligned_angle, orientation)
     new_center = cylindrical_to_cartesian(new_center[None, :]).squeeze(0)
     x_gen[:, :3] += new_center
-    x_gen[:, 3] = inverse_scale_intensity(x_gen[:, 3])  # rescale intensity to 0-30
     return x_gen
 
 @click.command()
@@ -100,6 +93,7 @@ def train(rank, world_size, cfg, weights, split, rootdir, batch_size, token_to_d
             permutation = json.load(f)[split]
         total_samples = min(limit_samples_count, len(permutation))
         permutation = np.array(permutation)[:total_samples]
+        existing_tokens = set() # we dont want to look for existing examples if we are using a specific permutation because it is index based
     dataset, collate = NuscenesObjectsDataModule(cfg).build_dataset(split, existing_tokens, permutation)
     sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank)
     dataloader = DataLoader(dataset, batch_size=batch_size, sampler=sampler, num_workers=cfg['train']['num_workers'], collate_fn=collate)
